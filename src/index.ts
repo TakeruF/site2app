@@ -173,14 +173,32 @@ function generateSetupSh(config: AppConfig, hasIcon: boolean): string {
     ? `
 # Copy icon files to Android resource directories
 echo "Copying app icons..."
+
+# Remove adaptive icon XMLs so our PNGs take precedence
+if [ -d "android/app/src/main/res/mipmap-anydpi-v26" ]; then
+  rm -rf "android/app/src/main/res/mipmap-anydpi-v26"
+  echo "  Removed adaptive icon XMLs (mipmap-anydpi-v26)"
+fi
+
 for density in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
   src_dir="icon/android/\${density}"
   dest_dir="android/app/src/main/res/\${density}"
   if [ -d "\${src_dir}" ]; then
     mkdir -p "\${dest_dir}"
+    # Remove any existing XML icon definitions in this density
+    rm -f "\${dest_dir}/ic_launcher.xml" "\${dest_dir}/ic_launcher_round.xml"
     cp "\${src_dir}/ic_launcher.png" "\${dest_dir}/ic_launcher.png"
     cp "\${src_dir}/ic_launcher_round.png" "\${dest_dir}/ic_launcher_round.png"
     echo "  Copied icons to \${dest_dir}"
+  fi
+done
+
+# Also replace foreground drawable used by adaptive icons (if directory exists)
+for density in drawable-mdpi drawable-hdpi drawable-xhdpi drawable-xxhdpi drawable-xxxhdpi; do
+  dest_dir="android/app/src/main/res/\${density}"
+  if [ -d "\${dest_dir}" ] && [ -f "\${dest_dir}/ic_launcher_foreground.xml" ]; then
+    rm -f "\${dest_dir}/ic_launcher_foreground.xml"
+    echo "  Removed \${dest_dir}/ic_launcher_foreground.xml"
   fi
 done
 `
