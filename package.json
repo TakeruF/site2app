@@ -1,0 +1,43 @@
+{
+  "name": "capacitor-apk-gen",
+  "version": "1.0.0",
+  "description": "CLI tool to generate Capacitor WebView APK projects from a URL",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "capacitor-apk-gen": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TakeruF/site2app.git"
+  },
+  "keywords": [
+    "capacitor",
+    "apk",
+    "webview",
+    "android",
+    "generator"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TakeruF/site2app/issues"
+  },
+  "homepage": "https://github.com/TakeruF/site2app#readme",
+  "dependencies": {
+    "@inquirer/prompts": "^8.4.1",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^25.5.2",
+    "@types/sharp": "^0.31.1",
+    "chalk": "^5.6.2",
+    "fs-extra": "^11.3.4",
+    "ora": "^9.3.0",
+    "sharp": "^0.34.5",
+    "typescript": "^6.0.2"
+  }
+}
