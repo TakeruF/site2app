@@ -171,6 +171,60 @@ android/app/build/outputs/apk/debug/app-debug.apk
 
 ---
 
+## 拡張機能（Extra plugins）について
+
+ステップ3の `Extra plugins` で、アプリに追加機能を組み込むことができます。  
+スペースキーで選択/解除し、Enterで確定します（何も選ばずEnterでスキップ可）。
+
+### @capacitor/status-bar
+
+スマホ画面上部の **ステータスバー**（時刻やバッテリーが表示されている部分）の見た目を制御できます。
+
+- ステータスバーの色を変更する
+- ステータスバーを非表示にして全画面表示にする
+- 文字色を白/黒に切り替える
+
+アプリのデザインに合わせてステータスバーをカスタマイズしたい場合に選択してください。  
+特にこだわりがなければ不要です。
+
+### @capacitor/splash-screen
+
+アプリ起動時に表示される **スプラッシュスクリーン**（起動画面）を制御できます。
+
+- 起動画面の表示時間を調整する
+- 起動画面のフェードアウトを設定する
+- プログラムから起動画面を非表示にする
+
+Webサイトの読み込みに時間がかかる場合、ロゴ入りの起動画面を表示しておくと見た目がよくなります。  
+読み込みが速いサイトであれば不要です。
+
+### プラグインの設定方法
+
+プラグインを選択した場合、`setup.sh` の実行時に自動でインストールされます。  
+プラグインの動作を細かく設定するには、生成されたプロジェクト内の `capacitor.config.json` に設定を追加します。
+
+例（スプラッシュスクリーンを3秒間表示する場合）：
+
+```json
+{
+  "appId": "com.example.myapp",
+  "appName": "MyApp",
+  "webDir": "public",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": true
+    }
+  }
+}
+```
+
+詳しい設定項目は各プラグインの公式ドキュメントを参照してください：
+- status-bar: https://capacitorjs.com/docs/apis/status-bar
+- splash-screen: https://capacitorjs.com/docs/apis/splash-screen
+
+---
+
 ## よくあるエラーと対処法
 
 | エラー内容 | 原因と対処 |

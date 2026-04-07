@@ -173,32 +173,29 @@ function generateSetupSh(config: AppConfig, hasIcon: boolean): string {
     ? `
 # Copy icon files to Android resource directories
 echo "Copying app icons..."
+RES_DIR="android/app/src/main/res"
 
-# Remove adaptive icon XMLs so our PNGs take precedence
-if [ -d "android/app/src/main/res/mipmap-anydpi-v26" ]; then
-  rm -rf "android/app/src/main/res/mipmap-anydpi-v26"
-  echo "  Removed adaptive icon XMLs (mipmap-anydpi-v26)"
-fi
+# Remove adaptive icon definitions (these override our PNGs on Android 8+)
+rm -rf "\${RES_DIR}/mipmap-anydpi-v26"
+echo "  Removed mipmap-anydpi-v26 (adaptive icon XMLs)"
 
+# Remove vector foreground/background XMLs that override PNGs
+rm -f "\${RES_DIR}/drawable-v24/ic_launcher_foreground.xml"
+rm -f "\${RES_DIR}/drawable/ic_launcher_background.xml"
+rm -f "\${RES_DIR}/values/ic_launcher_background.xml"
+echo "  Removed adaptive icon foreground/background XMLs"
+
+# Copy our PNGs into each mipmap density directory
 for density in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
   src_dir="icon/android/\${density}"
-  dest_dir="android/app/src/main/res/\${density}"
+  dest_dir="\${RES_DIR}/\${density}"
   if [ -d "\${src_dir}" ]; then
     mkdir -p "\${dest_dir}"
-    # Remove any existing XML icon definitions in this density
-    rm -f "\${dest_dir}/ic_launcher.xml" "\${dest_dir}/ic_launcher_round.xml"
     cp "\${src_dir}/ic_launcher.png" "\${dest_dir}/ic_launcher.png"
     cp "\${src_dir}/ic_launcher_round.png" "\${dest_dir}/ic_launcher_round.png"
+    # Remove the foreground PNG (no longer needed without adaptive icons)
+    rm -f "\${dest_dir}/ic_launcher_foreground.png"
     echo "  Copied icons to \${dest_dir}"
-  fi
-done
-
-# Also replace foreground drawable used by adaptive icons (if directory exists)
-for density in drawable-mdpi drawable-hdpi drawable-xhdpi drawable-xxhdpi drawable-xxxhdpi; do
-  dest_dir="android/app/src/main/res/\${density}"
-  if [ -d "\${dest_dir}" ] && [ -f "\${dest_dir}/ic_launcher_foreground.xml" ]; then
-    rm -f "\${dest_dir}/ic_launcher_foreground.xml"
-    echo "  Removed \${dest_dir}/ic_launcher_foreground.xml"
   fi
 done
 `
