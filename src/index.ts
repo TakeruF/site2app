@@ -103,6 +103,17 @@ async function promptUser(): Promise<AppConfig> {
   // Flatten comma-separated values (e.g. "x.com,twitter.com")
   const flatInAppDomains = inAppDomains.flatMap((d) => d.split(","));
 
+  // Allow adding custom domains
+  const customDomains = await input({
+    message: "Additional in-app domains (comma-separated, or press Enter to skip):",
+    default: "",
+  });
+
+  if (customDomains.trim()) {
+    const parsed = customDomains.split(",").map((d) => d.trim()).filter(Boolean);
+    flatInAppDomains.push(...parsed);
+  }
+
   return { targetUrl, appName, packageId, version, capacitorVersion, iconPath, extraPlugins, inAppDomains: flatInAppDomains };
 }
 

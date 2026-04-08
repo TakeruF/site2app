@@ -252,6 +252,8 @@ You can select from the following providers interactively (spacebar to select/de
 | LINE | `access.line.me` |
 | Discord | `discord.com` |
 
+After selecting providers, you can also type additional custom domains separated by commas (e.g. `auth.example.com, sso.myservice.com`).
+
 If you press Enter without selecting any, only the target domain will open in-app and all other links will open in the external browser.
 
 ---

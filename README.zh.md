@@ -251,6 +251,8 @@ android/app/build/outputs/apk/debug/app-debug.apk
 | LINE | `access.line.me` |
 | Discord | `discord.com` |
 
+选择提供商后，还可以用逗号分隔输入自定义域名（例：`auth.example.com, sso.myservice.com`）。
+
 如果不选择任何项直接按Enter，则只有目标域名在应用内打开，其他所有链接都将在外部浏览器中打开。
 
 ---
