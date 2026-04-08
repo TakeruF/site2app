@@ -35,6 +35,7 @@ interface AppConfig {
   capacitorVersion: string;
   iconPath: string;
   extraPlugins: string[];
+  inAppDomains: string[];
 }
 
 const skipConfirm = process.argv.includes("--yes") || process.argv.includes("-y");
@@ -84,7 +85,25 @@ async function promptUser(): Promise<AppConfig> {
     ],
   });
 
-  return { targetUrl, appName, packageId, version, capacitorVersion, iconPath, extraPlugins };
+  // External link handling — select domains to keep in-app (e.g. OAuth providers)
+  const inAppDomains = await checkbox({
+    message: "Open in-app (for sign-in etc.):",
+    choices: [
+      { name: "Google (accounts.google.com)", value: "accounts.google.com" },
+      { name: "Apple (appleid.apple.com)", value: "appleid.apple.com" },
+      { name: "GitHub (github.com/login)", value: "github.com" },
+      { name: "Facebook (facebook.com)", value: "facebook.com" },
+      { name: "X / Twitter (x.com, twitter.com)", value: "x.com,twitter.com" },
+      { name: "Microsoft (login.microsoftonline.com)", value: "login.microsoftonline.com" },
+      { name: "LINE (access.line.me)", value: "access.line.me" },
+      { name: "Discord (discord.com)", value: "discord.com" },
+    ],
+  });
+
+  // Flatten comma-separated values (e.g. "x.com,twitter.com")
+  const flatInAppDomains = inAppDomains.flatMap((d) => d.split(","));
+
+  return { targetUrl, appName, packageId, version, capacitorVersion, iconPath, extraPlugins, inAppDomains: flatInAppDomains };
 }
 
 function printSummary(config: AppConfig): void {
@@ -96,6 +115,7 @@ function printSummary(config: AppConfig): void {
   console.log(`  ${chalk.gray("Capacitor:")}    v${config.capacitorVersion}`);
   console.log(`  ${chalk.gray("Icon:")}         ${config.iconPath || "(default)"}`);
   console.log(`  ${chalk.gray("Plugins:")}      ${config.extraPlugins.length > 0 ? config.extraPlugins.join(", ") : "(none)"}`);
+  console.log(`  ${chalk.gray("In-app:")}       ${config.inAppDomains.length > 0 ? config.inAppDomains.join(", ") : "(target domain only)"}`);
   console.log();
 }
 
@@ -431,6 +451,14 @@ To create a signed release APK:
 | Package ID | \`${config.packageId}\` |
 | Version | \`${config.version}\` |
 | Capacitor | v${config.capacitorVersion} |
+| In-app domains | ${config.inAppDomains.length > 0 ? config.inAppDomains.map((d) => `\`${d}\``).join(", ") : "(target domain only)" } |
+
+## External Link Handling
+
+By default, links to external domains open in the system browser.
+The target domain (\`${config.targetUrl}\`) always opens inside the app.
+${config.inAppDomains.length > 0 ? `\nThe following domains also open in-app (for sign-in etc.):\n${config.inAppDomains.map((d) => `- \`${d}\``).join("\n")}\n` : ""}
+Special links (\`mailto:\`, \`tel:\`, etc.) are delegated to the OS.
 `;
 }
 
@@ -470,7 +498,7 @@ async function generate(config: AppConfig): Promise<void> {
     // Kotlin source templates (applied to Android project by setup.sh)
     const kotlinDir = path.join(outputDir, "kotlin-src");
     await fs.ensureDir(kotlinDir);
-    await fs.writeFile(path.join(kotlinDir, "MainActivity.kt"), generateMainActivityKt(config.packageId));
+    await fs.writeFile(path.join(kotlinDir, "MainActivity.kt"), generateMainActivityKt(config.packageId, config.targetUrl, config.inAppDomains));
     await fs.writeFile(path.join(kotlinDir, "MediaPlaybackService.kt"), generateMediaPlaybackServiceKt(config.packageId));
 
     // Media sample page

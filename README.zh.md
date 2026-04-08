@@ -107,6 +107,7 @@ npm start
 ? Capacitor version:         -> 直接按Enter即可
 ? App icon path:             -> 图标图片路径（无则直接按Enter跳过）
 ? Extra plugins:             -> 附加插件（不需要则直接按Enter跳过）
+? Open in-app:               -> 在应用内打开的域名（用于登录等，详见下文）
 ```
 
 > **什么是 Package ID？**  
@@ -220,6 +221,37 @@ android/app/build/outputs/apk/debug/app-debug.apk
 详细配置选项请参阅官方文档：
 - status-bar：https://capacitorjs.com/docs/apis/status-bar
 - splash-screen：https://capacitorjs.com/docs/apis/splash-screen
+
+---
+
+## 外部链接处理（Open in-app）
+
+在步骤3的 `Open in-app` 提示处，可以选择哪些域名应在应用内（WebView）打开，而非跳转到外部浏览器。
+
+### 默认行为
+
+- **与目标URL相同的域名** — 在应用内打开
+- **其他外部域名** — 在默认浏览器中打开
+- **特殊链接**（`mailto:`、`tel:` 等）— 委托给操作系统（打开邮件应用、电话应用等）
+
+### 添加登录域名
+
+如果您的网站使用Google或GitHub等外部服务进行登录，需要将这些域名设置为在应用内打开。否则，用户登录后将无法返回应用。
+
+可以通过交互方式选择以下提供商（空格键选择/取消，Enter确认）：
+
+| 提供商 | 域名 |
+|--------|------|
+| Google | `accounts.google.com` |
+| Apple | `appleid.apple.com` |
+| GitHub | `github.com` |
+| Facebook | `facebook.com` |
+| X / Twitter | `x.com`、`twitter.com` |
+| Microsoft | `login.microsoftonline.com` |
+| LINE | `access.line.me` |
+| Discord | `discord.com` |
+
+如果不选择任何项直接按Enter，则只有目标域名在应用内打开，其他所有链接都将在外部浏览器中打开。
 
 ---
 

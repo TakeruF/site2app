@@ -5,13 +5,23 @@
 /**
  * MainActivity.kt — Capacitor BridgeActivity with WebView media session bridge
  */
-export function generateMainActivityKt(packageId: string): string {
+export function generateMainActivityKt(packageId: string, targetUrl: string, inAppDomains: string[]): string {
+  // Extract host from targetUrl
+  const targetHost = (() => {
+    try { return new URL(targetUrl).hostname; } catch { return ""; }
+  })();
+
+  // Build the allowed domains list (target domain is always included)
+  const allDomains = [targetHost, ...inAppDomains].filter(Boolean);
+  const domainsKotlinList = allDomains.map((d) => `"${d}"`).join(", ");
+
   return `package ${packageId}
 
 import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -19,11 +29,16 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.webkit.JavascriptInterface
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import com.getcapacitor.BridgeActivity
 
 class MainActivity : BridgeActivity() {
+
+    /** Domains that should be opened inside the app (WebView). */
+    private val inAppDomains = listOf(${domainsKotlinList})
 
     private lateinit var mediaSession: MediaSessionCompat
     private var playbackService: MediaPlaybackService? = null
@@ -64,6 +79,37 @@ class MainActivity : BridgeActivity() {
             mediaPlaybackRequiresUserGesture = false
             domStorageEnabled = true
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        }
+
+        // Set up link routing: in-app domains stay in WebView, others open externally
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url ?: return false
+                val scheme = url.scheme ?: return false
+
+                // Delegate special schemes (mailto, tel, intent, etc.) to the OS
+                if (scheme != "http" && scheme != "https") {
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, url))
+                    } catch (_: Exception) { }
+                    return true
+                }
+
+                val host = url.host ?: return false
+
+                // Check if this domain should be opened in-app
+                for (domain in inAppDomains) {
+                    if (host == domain || host.endsWith(".\$domain")) {
+                        return false // Keep in WebView
+                    }
+                }
+
+                // External domain — open in the default browser
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, url))
+                } catch (_: Exception) { }
+                return true
+            }
         }
 
         // Add native bridge (only once)

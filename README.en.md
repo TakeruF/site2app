@@ -108,6 +108,7 @@ You will be asked a series of questions interactively:
 ? Capacitor version:         -> Press Enter for default
 ? App icon path:             -> Path to an icon image (press Enter to skip)
 ? Extra plugins:             -> Additional plugins (press Enter to skip)
+? Open in-app:               -> Domains to open inside the app (for sign-in, see below)
 ```
 
 > **What is a Package ID?**  
@@ -221,6 +222,37 @@ Example (show splash screen for 3 seconds):
 For detailed configuration options, refer to the official documentation:
 - status-bar: https://capacitorjs.com/docs/apis/status-bar
 - splash-screen: https://capacitorjs.com/docs/apis/splash-screen
+
+---
+
+## External Link Handling (Open in-app)
+
+In Step 3, the `Open in-app` prompt lets you choose which domains should be opened inside the app (WebView) rather than in an external browser.
+
+### Default Behavior
+
+- **Same domain as Target URL** — Opens inside the app
+- **Other external domains** — Opens in the default browser
+- **Special links** (`mailto:`, `tel:`, etc.) — Delegated to the OS (opens email app, phone app, etc.)
+
+### Adding Sign-in Domains
+
+If your site uses external services like Google or GitHub for sign-in, you need to keep those domains in-app. Otherwise, after signing in, the user won't be able to return to the app.
+
+You can select from the following providers interactively (spacebar to select/deselect, Enter to confirm):
+
+| Provider | Domain |
+|----------|--------|
+| Google | `accounts.google.com` |
+| Apple | `appleid.apple.com` |
+| GitHub | `github.com` |
+| Facebook | `facebook.com` |
+| X / Twitter | `x.com`, `twitter.com` |
+| Microsoft | `login.microsoftonline.com` |
+| LINE | `access.line.me` |
+| Discord | `discord.com` |
+
+If you press Enter without selecting any, only the target domain will open in-app and all other links will open in the external browser.
 
 ---
 
