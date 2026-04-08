@@ -90,12 +90,19 @@ function printSummary(config: AppConfig): void {
   console.log();
 }
 
+function expandHome(filePath: string): string {
+  if (filePath.startsWith("~/") || filePath === "~") {
+    return path.join(process.env.HOME || process.env.USERPROFILE || "", filePath.slice(1));
+  }
+  return filePath;
+}
+
 async function processIcon(config: AppConfig, outputDir: string): Promise<boolean> {
   if (!config.iconPath) return false;
 
-  const absIconPath = path.resolve(config.iconPath);
+  const absIconPath = path.resolve(expandHome(config.iconPath));
   if (!await fs.pathExists(absIconPath)) {
-    console.log(chalk.yellow(`  Warning: Icon file not found at ${absIconPath}, skipping icon processing.`));
+    console.log(chalk.yellow(`\n  Warning: Icon file not found at ${absIconPath}, skipping icon processing.`));
     return false;
   }
 
@@ -347,15 +354,14 @@ async function generate(config: AppConfig): Promise<void> {
     await fs.remove(outputDir);
   }
 
+  // Process icon before spinner so warnings are visible
+  const hasIcon = await processIcon(config, outputDir);
+
   const spinner = ora("Generating project files...").start();
 
   try {
     // Create directories
     await fs.ensureDir(path.join(outputDir, "public"));
-
-    // Process icon
-    spinner.text = "Processing icon...";
-    const hasIcon = await processIcon(config, outputDir);
 
     // Write files
     spinner.text = "Writing project files...";
