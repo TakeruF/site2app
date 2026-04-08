@@ -99,6 +99,14 @@ function printSummary(config: AppConfig): void {
   console.log();
 }
 
+function versionNameToCode(version: string): number {
+  const parts = version.split(".").map(Number);
+  const major = parts[0] || 0;
+  const minor = parts[1] || 0;
+  const patch = parts[2] || 0;
+  return major * 10000 + minor * 100 + patch;
+}
+
 function cleanPath(filePath: string): string {
   // Remove surrounding quotes (single or double) from copy-paste
   let cleaned = filePath.trim().replace(/^['"]|['"]$/g, "");
@@ -251,6 +259,14 @@ npx cap add android
 # Sync
 echo "Syncing..."
 npx cap sync android
+
+# Set app version in build.gradle
+echo "Setting app version to ${config.version}..."
+APP_GRADLE="android/app/build.gradle"
+sed -i.bak 's/versionName "1.0"/versionName "${config.version}"/' "\${APP_GRADLE}"
+sed -i.bak 's/versionCode 1/versionCode ${versionNameToCode(config.version)}/' "\${APP_GRADLE}"
+rm -f "\${APP_GRADLE}.bak"
+
 ${iconCopySteps}
 # =========================================================================
 # Media Session support — Kotlin sources, Manifest, Gradle
