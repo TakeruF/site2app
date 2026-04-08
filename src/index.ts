@@ -6,6 +6,15 @@ import ora from "ora";
 import fs from "fs-extra";
 import path from "path";
 import sharp from "sharp";
+import {
+  generateMainActivityKt,
+  generateMediaPlaybackServiceKt,
+  generateManifestPatch,
+  generateManifestServiceDecl,
+  generateGradlePatch,
+  generateProjectGradlePatch,
+  generateMediaSampleHtml,
+} from "./templates.js";
 
 const URL_REGEX = /^https?:\/\/.+/;
 const PACKAGE_ID_REGEX = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*){2,}$/;
@@ -243,6 +252,73 @@ npx cap add android
 echo "Syncing..."
 npx cap sync android
 ${iconCopySteps}
+# =========================================================================
+# Media Session support — Kotlin sources, Manifest, Gradle
+# =========================================================================
+echo ""
+echo "Applying Media Session support..."
+
+PACKAGE_DIR="${config.packageId.replace(/\./g, "/")}"
+JAVA_DIR="android/app/src/main/java/\${PACKAGE_DIR}"
+
+# Remove default Java MainActivity and copy Kotlin sources
+rm -f "\${JAVA_DIR}/MainActivity.java"
+cp kotlin-src/MainActivity.kt         "\${JAVA_DIR}/MainActivity.kt"
+cp kotlin-src/MediaPlaybackService.kt "\${JAVA_DIR}/MediaPlaybackService.kt"
+echo "  Copied Kotlin sources to \${JAVA_DIR}"
+
+# Patch AndroidManifest.xml — add permissions and service declaration
+MANIFEST="android/app/src/main/AndroidManifest.xml"
+
+# Add permissions (before <application>)
+if ! grep -q "FOREGROUND_SERVICE" "\${MANIFEST}"; then
+  sed -i.bak 's|<application|    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />\\
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />\\
+    <uses-permission android:name="android.permission.WAKE_LOCK" />\\
+\\
+    <application|' "\${MANIFEST}"
+  echo "  Added permissions to AndroidManifest.xml"
+fi
+
+# Add service declaration (before </application>)
+if ! grep -q "MediaPlaybackService" "\${MANIFEST}"; then
+  sed -i.bak 's|</application>|        <service\\
+            android:name=".MediaPlaybackService"\\
+            android:exported="false"\\
+            android:foregroundServiceType="mediaPlayback" />\\
+    </application>|' "\${MANIFEST}"
+  echo "  Added MediaPlaybackService to AndroidManifest.xml"
+fi
+rm -f "\${MANIFEST}.bak"
+
+# Patch app/build.gradle — add Kotlin plugin and media dependencies
+APP_GRADLE="android/app/build.gradle"
+if ! grep -q "kotlin-android" "\${APP_GRADLE}"; then
+  cat >> "\${APP_GRADLE}" << 'GRADLE_PATCH'
+
+// --- Media Session support (added by site2app) ---
+apply plugin: 'kotlin-android'
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation "androidx.media:media:1.7.0"
+}
+GRADLE_PATCH
+  echo "  Patched app/build.gradle with Kotlin + media deps"
+fi
+
+# Patch project-level build.gradle — add Kotlin classpath
+PROJECT_GRADLE="android/build.gradle"
+if ! grep -q "kotlin-gradle-plugin" "\${PROJECT_GRADLE}"; then
+  sed -i.bak '/classpath.*com.android.tools.build:gradle/a\\
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22"' "\${PROJECT_GRADLE}"
+  rm -f "\${PROJECT_GRADLE}.bak"
+  echo "  Patched build.gradle with Kotlin classpath"
+fi
+
+echo "  Media Session support applied!"
+
 echo ""
 echo "=== Setup complete! ==="
 echo ""
@@ -374,6 +450,15 @@ async function generate(config: AppConfig): Promise<void> {
     await fs.writeFile(path.join(outputDir, "setup.sh"), generateSetupSh(config, hasIcon), { mode: 0o755 });
     await fs.writeFile(path.join(outputDir, "build.sh"), generateBuildSh(config), { mode: 0o755 });
     await fs.writeFile(path.join(outputDir, "README.md"), generateReadme(config));
+
+    // Kotlin source templates (applied to Android project by setup.sh)
+    const kotlinDir = path.join(outputDir, "kotlin-src");
+    await fs.ensureDir(kotlinDir);
+    await fs.writeFile(path.join(kotlinDir, "MainActivity.kt"), generateMainActivityKt(config.packageId));
+    await fs.writeFile(path.join(kotlinDir, "MediaPlaybackService.kt"), generateMediaPlaybackServiceKt(config.packageId));
+
+    // Media sample page
+    await fs.writeFile(path.join(outputDir, "public", "media-demo.html"), generateMediaSampleHtml());
 
     spinner.succeed("Project generated successfully!");
   } catch (err) {
