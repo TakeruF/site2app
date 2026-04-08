@@ -90,17 +90,20 @@ function printSummary(config: AppConfig): void {
   console.log();
 }
 
-function expandHome(filePath: string): string {
-  if (filePath.startsWith("~/") || filePath === "~") {
-    return path.join(process.env.HOME || process.env.USERPROFILE || "", filePath.slice(1));
+function cleanPath(filePath: string): string {
+  // Remove surrounding quotes (single or double) from copy-paste
+  let cleaned = filePath.trim().replace(/^['"]|['"]$/g, "");
+  // Expand ~ to home directory
+  if (cleaned.startsWith("~/") || cleaned === "~") {
+    cleaned = path.join(process.env.HOME || process.env.USERPROFILE || "", cleaned.slice(1));
   }
-  return filePath;
+  return cleaned;
 }
 
 async function processIcon(config: AppConfig, outputDir: string): Promise<boolean> {
   if (!config.iconPath) return false;
 
-  const absIconPath = path.resolve(expandHome(config.iconPath));
+  const absIconPath = path.resolve(cleanPath(config.iconPath));
   if (!await fs.pathExists(absIconPath)) {
     console.log(chalk.yellow(`\n  Warning: Icon file not found at ${absIconPath}, skipping icon processing.`));
     return false;
