@@ -1,5 +1,7 @@
 # site2app — WebサイトをAndroidアプリに変換するツール
 
+**[English](README.en.md)** | **[中文](README.zh.md)** | **日本語**
+
 お気に入りのWebサイトのURLを入力するだけで、Androidアプリ（APKファイル）を作るためのプロジェクトを自動生成します。
 
 ---
