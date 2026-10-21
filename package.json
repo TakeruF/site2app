@@ -30,14 +30,14 @@
   },
   "homepage": "https://github.com/TakeruF/site2app#readme",
   "dependencies": {
-    "@inquirer/prompts": "^8.4.1",
+    "@inquirer/prompts": "^8.7.3",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.5.2",
     "@types/sharp": "^0.31.1",
     "chalk": "^5.6.2",
-    "fs-extra": "^11.3.4",
-    "ora": "^9.3.0",
-    "sharp": "^0.35.0",
+    "fs-extra": "^11.4.1",
+    "ora": "^9.4.1",
+    "sharp": "^0.35.5",
     "typescript": "^6.0.2"
   }
 }
