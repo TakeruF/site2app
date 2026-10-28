@@ -38,6 +38,6 @@
     "fs-extra": "^11.4.1",
     "ora": "^9.4.1",
     "sharp": "^0.35.5",
-    "typescript": "^6.0.2"
+    "typescript": "^7.0.2"
   }
 }
